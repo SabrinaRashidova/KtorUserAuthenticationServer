@@ -1,16 +1,55 @@
 package org.example
 
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
-fun main() {
-    val name = "Kotlin"
-    //TIP Press <shortcut actionId="ShowIntentionActions"/> with your caret at the highlighted text
-    // to see how IntelliJ IDEA suggests fixing it.
-    println("Hello, " + name + "!")
+import io.github.cdimascio.dotenv.dotenv
+import io.ktor.serialization.kotlinx.json.json
+import io.ktor.server.application.install
+import io.ktor.server.engine.embeddedServer
+import io.ktor.server.netty.Netty
+import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.server.routing.routing
+import org.example.model.UsersTable
+import org.example.routes.authRoutes
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.transactions.transaction
 
-    for (i in 1..5) {
-        //TIP Press <shortcut actionId="Debug"/> to start debugging your code. We have set one <icon src="AllIcons.Debugger.Db_set_breakpoint"/> breakpoint
-        // for you, but you can always add more by pressing <shortcut actionId="ToggleLineBreakpoint"/>.
-        println("i = $i")
+
+fun main(){
+    connectDatabase()
+
+    embeddedServer(Netty, port = 8080){
+        install(ContentNegotiation){
+            json()
+        }
+
+        routing {
+            authRoutes()
+        }
+    }.start(wait = true)
+
+}
+
+fun connectDatabase(){
+    val dotenv = dotenv()
+
+    val host = dotenv["DB_HOST"] ?: error("DB_HOST missing")
+    val port = dotenv["DB_PORT"] ?: "5432"
+    val dbName = dotenv["DB_NAME"] ?: error("DB_NAME missing")
+    val dbUser = dotenv["DB_USER"] ?: error("DB_USER missing")
+    val dbPass = dotenv["DB_PASSWORD"] ?: error("DB_PASSWORD missing")
+
+    val jdbcUrl = "jdbc:postgresql://$host:$port/$dbName"
+
+    Database.connect(
+        url = jdbcUrl,
+        driver = "org.postgresql.Driver",
+        user = dbUser,
+        password = dbPass
+    )
+
+    transaction {
+        SchemaUtils.create(UsersTable)
     }
 }
+
+
