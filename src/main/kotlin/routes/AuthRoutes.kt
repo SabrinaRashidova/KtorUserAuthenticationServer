@@ -10,8 +10,22 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import at.favre.lib.crypto.bcrypt.BCrypt
 import org.example.model.UserDTO
 import org.example.model.UsersTable
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 
 fun Route.authRoutes() {
+
+    get("/users") {
+        val users = transaction {
+            UsersTable.selectAll().map {row->
+                UserDTO(
+                    username = row[UsersTable.username],
+                    password = row[UsersTable.password]
+                )
+            }
+        }
+
+        call.respond(HttpStatusCode.OK, users)
+    }
 
     post("/register") {
         val newUser = call.receive<UserDTO>()
@@ -59,6 +73,49 @@ fun Route.authRoutes() {
         }
 
         call.respond(HttpStatusCode.OK, "Login successful.")
+    }
+
+    post("/update"){
+        val user = call.receive<UserDTO>()
+
+        val updated = transaction {
+            val storedUser = UsersTable.selectAll().firstOrNull(){it[UsersTable.username] == user.username}?.get(
+                UsersTable.password)
+            if (storedUser != null){
+                val hashedPassword = BCrypt.withDefaults().hashToString(12,user.password.toCharArray())
+                UsersTable.update({ UsersTable.username eq user.username}){
+                    it[password] = hashedPassword
+                }
+                true
+            }else{
+                false
+            }
+        }
+
+        if (updated){
+            call.respond(HttpStatusCode.OK, "User updated successfully.")
+        } else {
+            call.respond(HttpStatusCode.NotFound, "User not found.")
+        }
+    }
+
+    delete("/delete/{username"){
+        val username = call.parameters["username"]
+
+        if (username == null){
+            call.respond(HttpStatusCode.BadRequest, "Username required.")
+            return@delete
+        }
+
+        val deleted = transaction {
+            UsersTable.deleteWhere{ UsersTable.username eq username }
+        }
+
+        if (deleted > 0){
+            call.respond(HttpStatusCode.OK,"User deleted successfully")
+        } else {
+            call.respond(HttpStatusCode.NotFound, "User not found.")
+        }
     }
 }
 
