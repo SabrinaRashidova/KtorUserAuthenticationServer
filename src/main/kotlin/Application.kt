@@ -9,11 +9,13 @@ import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.routing.routing
 import org.example.data.model.UsersTable
 import org.example.data.repository.UserRepositoryImpl
+import org.example.di.appModule
 import org.example.domain.service.UserService
 import org.example.routes.authRoutes
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.koin.logger.slf4jLogger
 
 
 fun main(){
@@ -24,11 +26,13 @@ fun main(){
             json()
         }
 
-        val userRepository = UserRepositoryImpl()
-        val userService = UserService(userRepository)
+        install(org.koin.ktor.plugin.Koin){
+            slf4jLogger()
+            modules(appModule)
+        }
 
         routing {
-            authRoutes(userService)
+            authRoutes()
         }
     }.start(wait = true)
 

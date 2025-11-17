@@ -5,15 +5,13 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.transactions.transaction
-import at.favre.lib.crypto.bcrypt.BCrypt
-import org.example.data.model.UsersTable
 import org.example.domain.service.UserService
 import org.example.model.UserDTO
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.koin.ktor.ext.inject
 
-fun Route.authRoutes(service: UserService) {
+fun Route.authRoutes() {
+
+    val service by inject<UserService>()
 
     post("/register") {
         val body = call.receive<UserDTO>()
