@@ -1,15 +1,6 @@
-package org.example.model
+package org.example.data.model
 
-import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.sql.Table
-
-@Serializable
-data class UserDTO(
-    val username: String,
-    val password: String
-)
-
-
 
 object UsersTable : Table() {
     val id = integer("id").autoIncrement()
@@ -17,5 +8,3 @@ object UsersTable : Table() {
     val password = varchar("password", 64)
     override val primaryKey = PrimaryKey(id)
 }
-
-

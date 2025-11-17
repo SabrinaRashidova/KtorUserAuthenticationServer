@@ -8,15 +8,15 @@ import io.ktor.server.routing.*
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import at.favre.lib.crypto.bcrypt.BCrypt
+import org.example.data.model.UsersTable
 import org.example.model.UserDTO
-import org.example.model.UsersTable
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 
 fun Route.authRoutes() {
 
     get("/users") {
         val users = transaction {
-            UsersTable.selectAll().map {row->
+            UsersTable.selectAll().map { row->
                 UserDTO(
                     username = row[UsersTable.username],
                     password = row[UsersTable.password]
