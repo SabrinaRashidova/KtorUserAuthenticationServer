@@ -8,6 +8,8 @@ import io.ktor.server.netty.Netty
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.routing.routing
 import org.example.data.model.UsersTable
+import org.example.data.repository.UserRepositoryImpl
+import org.example.domain.service.UserService
 import org.example.routes.authRoutes
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
@@ -22,8 +24,11 @@ fun main(){
             json()
         }
 
+        val userRepository = UserRepositoryImpl()
+        val userService = UserService(userRepository)
+
         routing {
-            authRoutes()
+            authRoutes(userService)
         }
     }.start(wait = true)
 
