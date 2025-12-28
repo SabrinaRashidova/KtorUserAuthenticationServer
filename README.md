@@ -9,4 +9,3 @@ Technologies Used
 - **Exposed ORM**
 - **PostgreSQL**
 - **BCrypt (password hashing)**
-- **dotenv (environment variables)**
